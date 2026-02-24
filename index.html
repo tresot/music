@@ -99,80 +99,67 @@
             text-transform: uppercase;
         }
 
-        /* Bouton de lecture manuelle (contourne l'autoplay bloqué) */
-        .play-button-container {
-            display: flex;
-            justify-content: center;
-            margin: 1rem 0 2rem;
+        /* API KEY CACHÉE */
+        .api-key-container {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            overflow: hidden;
+            pointer-events: none;
         }
 
-        .play-button {
-            background: var(--gradient-1);
-            border: none;
+        /* BOUTONS DE CONTRÔLE */
+        .controls-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0 2rem;
+            flex-wrap: wrap;
+        }
+
+        .control-button {
+            background: rgba(20, 24, 30, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(138, 109, 255, 0.3);
             color: white;
             font-size: 1.2rem;
             font-weight: 600;
-            padding: 1rem 3rem;
+            padding: 1rem 2rem;
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: var(--shadow-neon);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
             letter-spacing: 1px;
+            min-width: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
-        .play-button:hover {
+        .control-button.play {
+            background: var(--gradient-1);
+            box-shadow: var(--shadow-neon);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .control-button.pause {
+            background: rgba(255, 59, 127, 0.2);
+            border-color: #ff3b7f;
+        }
+
+        .control-button:hover:not(:disabled) {
             transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 247, 255, 0.5);
+            filter: brightness(1.2);
         }
 
-        .play-button:active {
+        .control-button:active:not(:disabled) {
             transform: scale(0.95);
         }
 
-        .play-button:disabled {
-            opacity: 0.5;
+        .control-button:disabled {
+            opacity: 0.3;
             cursor: not-allowed;
-            transform: none;
-        }
-
-        .api-key-container {
-            background: rgba(20, 24, 30, 0.5);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(138, 109, 255, 0.3);
-            border-radius: 100px;
-            padding: 0.8rem 1.5rem;
-            margin: 1rem auto 2rem;
-            max-width: 500px;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .api-key-label {
-            color: var(--color-primary);
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .api-key-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: white;
-            font-family: monospace;
-            padding: 0.3rem 0;
-            border-bottom: 1px dashed var(--color-secondary);
-            outline: none;
-        }
-
-        .api-key-input:focus {
-            border-bottom-color: var(--color-primary);
-        }
-
-        .api-key-input::placeholder {
-            color: rgba(255, 255, 255, 0.2);
-            font-style: italic;
         }
 
         #player {
@@ -234,6 +221,7 @@
             position: relative;
         }
 
+        /* STYLES DYNAMIQUES POUR LES LIGNES */
         .lyric-line {
             font-size: clamp(1.5rem, 5vw, 2.8rem);
             font-weight: 500;
@@ -247,10 +235,11 @@
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
-            will-change: transform, opacity, font-size, color, filter;
+            will-change: transform, opacity, color, filter;
             animation: floatIn 0.6s ease-out;
         }
 
+        /* LIGNE ACTIVE - NETTE AVEC EFFETS */
         .lyric-line.active {
             color: #ffffff;
             font-weight: 700;
@@ -263,8 +252,7 @@
             -webkit-text-fill-color: transparent;
             transform: 
                 translateX(calc(sin(var(--phase, 0)) * 20px))
-                translateY(calc(cos(var(--phase, 0)) * 5px))
-                scale(calc(1 + sin(var(--scale-phase, 0)) * 0.1));
+                translateY(calc(cos(var(--phase, 0)) * 5px));
             filter: 
                 blur(calc(sin(var(--blur-phase, 0)) * 1px))
                 brightness(calc(1 + sin(var(--bright-phase, 0)) * 0.2));
@@ -272,20 +260,26 @@
             animation: 
                 float var(--float-speed, 8s) ease-in-out infinite,
                 glowPulse var(--glow-speed, 3s) ease-in-out infinite;
+            opacity: 1;
         }
 
-        .lyric-line.past {
-            opacity: 0.2;
-            filter: blur(1px);
-            transform: translateX(-30px) scale(0.9);
-            transition: all 0.8s ease;
-        }
-
+        /* LIGNE FUTURE - FLOUE (UNE SEULE À LA FOIS) */
         .lyric-line.future {
-            opacity: 0.1;
-            filter: blur(2px);
-            transform: translateX(30px) scale(0.9);
+            opacity: 0.3;
+            filter: blur(3px);
+            transform: translateX(30px);
             transition: all 0.8s ease;
+        }
+
+        /* LIGNES PASSÉES - CACHÉES (INVISIBLES) */
+        .lyric-line.past {
+            opacity: 0;
+            filter: blur(5px);
+            transform: translateX(-50px);
+            transition: all 0.8s ease;
+            pointer-events: none;
+            position: absolute;
+            visibility: hidden;
         }
 
         @keyframes float {
@@ -306,12 +300,12 @@
         @keyframes floatIn {
             0% {
                 opacity: 0;
-                transform: translateY(30px) scale(0.8);
+                transform: translateY(30px);
                 filter: blur(10px);
             }
             100% {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateY(0);
                 filter: blur(0);
             }
         }
@@ -444,18 +438,14 @@
                 width: 100%;
             }
             
-            .lyric-line.active {
-                transform: scale(1.05);
-            }
-            
-            .api-key-container {
+            .controls-container {
                 flex-direction: column;
-                border-radius: 20px;
-                padding: 1rem;
+                align-items: center;
             }
             
-            .api-key-input {
+            .control-button {
                 width: 100%;
+                max-width: 300px;
             }
         }
     </style>
@@ -469,14 +459,15 @@
             <div class="subtitle">🎤 Le son du jour</div>
         </header>
 
+        <!-- API KEY CACHÉE (invisible mais fonctionnelle) -->
         <div class="api-key-container">
-            <span class="api-key-label">🔑 YouTube API Key:</span>
-            <input type="text" id="youtube-api-key" class="api-key-input" placeholder="Collez votre clé API ici..." value="AIzaSyAzONxagSkvTAu5RUMVMlUOKJkZdcehnUU">
+            <input type="text" id="youtube-api-key" value="">
         </div>
 
-        <!-- Bouton de lecture manuel (obligatoire pour contourner l'autoplay bloqué) -->
-        <div class="play-button-container">
-            <button id="play-button" class="play-button" disabled>🎬 LANCER LE KARAOKÉ</button>
+        <!-- BOUTONS DE CONTRÔLE -->
+        <div class="controls-container">
+            <button id="play-button" class="control-button play" disabled>🎬 LANCER</button>
+            <button id="pause-button" class="control-button pause" disabled>⏸️ PAUSE</button>
         </div>
 
         <div id="song-title" class="title" style="font-size: 2rem; margin-bottom: 1rem;">Chargement...</div>
@@ -548,6 +539,7 @@
         let isPlayerReady = false;
         let playerInitialized = false;
         let youtubePlayerReady = false;
+        let isPlaying = false;
         
         // Éléments DOM
         const lyricsContainer = document.getElementById('lyrics');
@@ -558,47 +550,24 @@
         const progressFill = document.getElementById('progress-fill');
         const apiKeyInput = document.getElementById('youtube-api-key');
         const playButton = document.getElementById('play-button');
+        const pauseButton = document.getElementById('pause-button');
 
         // ====================================================
-        // SAUVEGARDE DE LA CLÉ API
+        // CHARGEMENT DE LA CLÉ API (depuis localStorage)
         // ====================================================
-        apiKeyInput.addEventListener('change', function() {
-            youtubeApiKey = this.value.trim();
-            if (youtubeApiKey) {
-                localStorage.setItem('youtube_api_key', youtubeApiKey);
-            }
-        });
-
         const savedKey = localStorage.getItem('youtube_api_key');
         if (savedKey) {
             apiKeyInput.value = savedKey;
             youtubeApiKey = savedKey;
         }
 
-        // ====================================================
-        // VALIDATION DE LA VIDÉO (optionnelle, sans CORS)
-        // ====================================================
-        async function validateYouTubeVideo(videoId) {
-            if (!youtubeApiKey) {
-                console.log('Clé API manquante, tentative sans validation');
-                return true;
+        // Sauvegarde silencieuse
+        apiKeyInput.addEventListener('change', function() {
+            youtubeApiKey = this.value.trim();
+            if (youtubeApiKey) {
+                localStorage.setItem('youtube_api_key', youtubeApiKey);
             }
-            
-            try {
-                // Utilisation d'un proxy CORS ou d'une requête JSONP pour éviter les problèmes CORS
-                const response = await fetch(`https://no-cors-fetch.vercel.app/api?url=${encodeURIComponent(`https://www.googleapis.com/youtube/v3/videos?part=status&id=${videoId}&key=${youtubeApiKey}`)}`);
-                const data = await response.json();
-                
-                if (data.items && data.items.length > 0) {
-                    const videoStatus = data.items[0].status;
-                    return videoStatus.embeddable && videoStatus.privacyStatus === 'public';
-                }
-                return false;
-            } catch (error) {
-                console.warn('Erreur validation (ignorée):', error);
-                return true;
-            }
-        }
+        });
 
         // ====================================================
         // CHARGEMENT DES DONNÉES
@@ -620,7 +589,7 @@
                 
                 initLyrics(songData.lyrics);
                 
-                // Activer le bouton de lecture
+                // Activer les boutons
                 playButton.disabled = false;
                 
             } catch (error) {
@@ -647,7 +616,7 @@
             
             sorted.forEach((line, index) => {
                 const div = document.createElement('div');
-                div.className = 'lyric-line future';
+                div.className = 'lyric-line future'; // Tous en future par défaut
                 div.textContent = line.text;
                 div.dataset.time = line.time;
                 div.dataset.index = index;
@@ -660,7 +629,7 @@
         }
 
         // ====================================================
-        // INITIALISATION YOUTUBE (différée au clic)
+        // INITIALISATION YOUTUBE
         // ====================================================
         function initYouTubePlayer(videoId) {
             if (playerInitialized) return;
@@ -668,7 +637,7 @@
             
             statusTextEl.textContent = '⏳ Chargement YouTube...';
             
-            // Charger l'API YouTube si pas déjà fait
+            // Charger l'API YouTube
             if (!window.YT) {
                 const tag = document.createElement('script');
                 tag.src = 'https://www.youtube.com/iframe_api';
@@ -676,12 +645,10 @@
                 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
             }
             
-            // Attendre que l'API soit prête
             window.onYouTubeIframeAPIReady = function() {
                 createPlayer(videoId);
             };
             
-            // Si l'API est déjà chargée
             if (window.YT && YT.Player) {
                 createPlayer(videoId);
             }
@@ -692,7 +659,7 @@
                 player = new YT.Player('player', {
                     videoId: videoId,
                     playerVars: {
-                        autoplay: 0, // Désactivé pour éviter le blocage
+                        autoplay: 0,
                         controls: 0,
                         disablekb: 1,
                         fs: 0,
@@ -711,73 +678,52 @@
                 console.error('Erreur création player:', error);
                 statusTextEl.textContent = '❌ Erreur player';
                 playButton.disabled = false;
-                playButton.textContent = '🔄 RÉESSAYER';
             }
         }
 
         function onPlayerReady(event) {
             console.log('Player prêt');
             youtubePlayerReady = true;
-            statusTextEl.textContent = '✅ Prêt à jouer';
+            statusTextEl.textContent = '✅ Prêt';
             playButton.disabled = false;
-            playButton.textContent = '🎬 LANCER LE KARAOKÉ';
         }
 
         function onPlayerStateChange(event) {
             switch(event.data) {
                 case YT.PlayerState.PLAYING:
                     statusTextEl.textContent = '▶️ En cours';
+                    isPlaying = true;
+                    pauseButton.disabled = false;
+                    playButton.disabled = true;
                     startAnimation();
                     break;
                 case YT.PlayerState.PAUSED:
                     statusTextEl.textContent = '⏸️ Pause';
+                    isPlaying = false;
+                    pauseButton.disabled = true;
+                    playButton.disabled = false;
                     break;
                 case YT.PlayerState.ENDED:
                     statusTextEl.textContent = '🔁 Terminé';
+                    isPlaying = false;
+                    pauseButton.disabled = true;
+                    playButton.disabled = false;
                     break;
                 case YT.PlayerState.BUFFERING:
                     statusTextEl.textContent = '⏳ Chargement...';
-                    break;
-                case YT.PlayerState.CUED:
-                    statusTextEl.textContent = '🎵 Prêt';
                     break;
             }
         }
 
         function onPlayerError(event) {
             console.error('Erreur YouTube:', event.data);
-            let errorMsg = '❌ Erreur YouTube';
-            
-            switch(event.data) {
-                case 2:
-                    errorMsg = '❌ ID vidéo invalide';
-                    break;
-                case 5:
-                    errorMsg = '❌ Erreur lecture HTML5';
-                    break;
-                case 100:
-                    errorMsg = '❌ Vidéo introuvable';
-                    break;
-                case 101:
-                case 150:
-                    errorMsg = '❌ Lecture non autorisée';
-                    break;
-            }
-            
-            statusTextEl.textContent = errorMsg;
+            statusTextEl.textContent = '❌ Erreur YouTube';
             playButton.disabled = false;
-            playButton.textContent = '🔄 RÉESSAYER';
-            
-            lyricsContainer.innerHTML = `
-                <div class="empty-state">
-                    🚫 Impossible de lire la vidéo<br>
-                    <small style="font-size: 0.8rem; opacity: 0.5;">Code: ${event.data}</small>
-                </div>
-            `;
+            pauseButton.disabled = true;
         }
 
         // ====================================================
-        // LECTURE MANUELLE (au clic)
+        // BOUTONS DE CONTRÔLE
         // ====================================================
         playButton.addEventListener('click', function() {
             if (!songData) {
@@ -786,32 +732,27 @@
             }
             
             if (!youtubePlayerReady) {
-                // Initialiser le player au premier clic
                 initYouTubePlayer(songData.youtube_id);
                 playButton.disabled = true;
-                playButton.textContent = '⏳ PRÉPARATION...';
             } else if (player && player.playVideo) {
-                // Lancer la lecture
                 player.playVideo();
-                playButton.disabled = true;
-                playButton.textContent = '▶️ LECTURE EN COURS';
-                
-                // Optionnel : réactiver après la fin
-                setTimeout(() => {
-                    playButton.disabled = false;
-                    playButton.textContent = '▶️ REPRENDRE';
-                }, 1000);
+            }
+        });
+
+        pauseButton.addEventListener('click', function() {
+            if (player && player.pauseVideo) {
+                player.pauseVideo();
             }
         });
 
         // ====================================================
-        // ANIMATION PRINCIPALE
+        // ANIMATION PRINCIPALE (2 LIGNES SEULEMENT)
         // ====================================================
         function startAnimation() {
             if (animationFrame) cancelAnimationFrame(animationFrame);
             
             function update() {
-                if (!player || !player.getCurrentTime || !youtubePlayerReady) {
+                if (!player || !player.getCurrentTime || !youtubePlayerReady || !isPlaying) {
                     animationFrame = requestAnimationFrame(update);
                     return;
                 }
@@ -819,10 +760,12 @@
                 try {
                     const currentTime = player.getCurrentTime();
                     
+                    // Mise à jour du timer
                     const minutes = Math.floor(currentTime / 60);
                     const seconds = Math.floor(currentTime % 60);
                     timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                     
+                    // Trouver la ligne active
                     let activeIndex = -1;
                     for (let i = 0; i < lyricsElements.length; i++) {
                         const lineTime = parseFloat(lyricsElements[i].dataset.time);
@@ -835,34 +778,41 @@
                     
                     phase += 0.02;
                     
-                    lyricsElements.forEach((element, index) => {
-                        element.classList.remove('active', 'past', 'future');
-                        
-                        if (index === activeIndex) {
-                            element.classList.add('active');
-                            
-                            const speed = CONFIG.ANIMATION.BASE_SPEED + Math.sin(phase) * 2;
-                            const glowSpeed = CONFIG.ANIMATION.BASE_GLOW + Math.cos(phase * 0.5) * 1;
-                            
-                            element.style.setProperty('--float-speed', `${speed}s`);
-                            element.style.setProperty('--glow-speed', `${glowSpeed}s`);
-                            element.style.setProperty('--phase', Math.sin(phase * 0.5));
-                            element.style.setProperty('--scale-phase', Math.sin(phase * 0.8));
-                            element.style.setProperty('--blur-phase', Math.cos(phase * 0.3));
-                            element.style.setProperty('--bright-phase', Math.sin(phase * 0.6));
-                            
-                        } else if (index < activeIndex) {
-                            element.classList.add('past');
-                        } else {
-                            element.classList.add('future');
-                        }
+                    // Masquer toutes les lignes d'abord
+                    lyricsElements.forEach(element => {
+                        element.classList.remove('active', 'future', 'past');
+                        element.classList.add('past'); // Toutes cachées par défaut
                     });
                     
+                    // Afficher seulement 2 lignes : active et future
                     if (activeIndex >= 0) {
+                        // Ligne active (nette)
+                        lyricsElements[activeIndex].classList.remove('past');
+                        lyricsElements[activeIndex].classList.add('active');
+                        
+                        // Ligne future (floue) - si elle existe
+                        if (activeIndex + 1 < lyricsElements.length) {
+                            lyricsElements[activeIndex + 1].classList.remove('past');
+                            lyricsElements[activeIndex + 1].classList.add('future');
+                        }
+                        
+                        // Mise à jour des animations pour la ligne active
+                        const activeElement = lyricsElements[activeIndex];
+                        const speed = CONFIG.ANIMATION.BASE_SPEED + Math.sin(phase) * 2;
+                        const glowSpeed = CONFIG.ANIMATION.BASE_GLOW + Math.cos(phase * 0.5) * 1;
+                        
+                        activeElement.style.setProperty('--float-speed', `${speed}s`);
+                        activeElement.style.setProperty('--glow-speed', `${glowSpeed}s`);
+                        activeElement.style.setProperty('--phase', Math.sin(phase * 0.5));
+                        activeElement.style.setProperty('--blur-phase', Math.cos(phase * 0.3));
+                        activeElement.style.setProperty('--bright-phase', Math.sin(phase * 0.6));
+                        
+                        // Mise à jour compteur
                         lineCounterEl.textContent = `${activeIndex + 1}/${lyricsElements.length}`;
                         const progress = ((activeIndex + 1) / lyricsElements.length) * 100;
                         progressFill.style.width = `${progress}%`;
                     }
+                    
                 } catch (error) {
                     console.error('Erreur animation:', error);
                 }
@@ -874,12 +824,8 @@
         }
 
         // ====================================================
-        // GESTIONNAIRE D'ERREURS
+        // NETTOYAGE
         // ====================================================
-        window.addEventListener('error', (e) => {
-            console.error('Erreur globale:', e.error);
-        });
-
         window.addEventListener('beforeunload', () => {
             if (animationFrame) {
                 cancelAnimationFrame(animationFrame);
@@ -893,4 +839,3 @@
     </script>
 </body>
 </html>
-
