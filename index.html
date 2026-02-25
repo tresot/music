@@ -24,7 +24,7 @@
             --gradient-1: linear-gradient(135deg, #00f7ff, #8a6dff);
             --gradient-2: linear-gradient(45deg, #ff3b7f, #ff9a3b);
             --shadow-neon: 0 0 20px rgba(0, 247, 255, 0.3);
-            --line-height: 5rem; /* Hauteur fixe pour chaque ligne */
+            --line-height: 5rem;
         }
 
         body {
@@ -178,7 +178,7 @@
         }
 
         /* ====================================================
-           NOUVEAU SYSTÈME DE DÉFILEMENT VERTICAL
+           FENÊTRE KARAOKÉ
            ==================================================== */
         .karaoke-window {
             background: rgba(20, 24, 30, 0.7);
@@ -190,7 +190,7 @@
             box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             position: relative;
             overflow: hidden;
-            height: calc(var(--line-height) * 2 + 4rem); /* Exactement 2 lignes + padding */
+            height: calc(var(--line-height) * 2 + 4rem);
             min-height: unset;
             display: flex;
             align-items: center;
@@ -214,7 +214,7 @@
             opacity: 1;
         }
 
-        /* Le conteneur qui défile */
+        /* CONTENEUR QUI DÉFILE */
         .lyrics-container {
             width: 100%;
             display: flex;
@@ -225,7 +225,7 @@
             transform: translateY(0);
         }
 
-        /* Chaque ligne de parole */
+        /* LIGNES DE PAROLES */
         .lyric-line {
             font-size: clamp(1.5rem, 5vw, 2.8rem);
             font-weight: 500;
@@ -244,9 +244,10 @@
             position: relative;
             flex-shrink: 0;
             animation: floatIn 0.6s ease-out;
+            opacity: 0.5; /* Visibles mais atténuées par défaut */
         }
 
-        /* LIGNE ACTIVE - au centre */
+        /* LIGNE ACTIVE */
         .lyric-line.active {
             color: #ffffff;
             font-weight: 700;
@@ -267,21 +268,21 @@
             animation: 
                 float var(--float-speed, 8s) ease-in-out infinite,
                 glowPulse var(--glow-speed, 3s) ease-in-out infinite;
+            opacity: 1;
         }
 
-        /* LIGNE FUTURE - floue (juste en dessous) */
+        /* LIGNE SUIVANTE (FLOUE) */
         .lyric-line.future {
             opacity: 0.3;
             filter: blur(3px);
             transform: translateX(30px);
         }
 
-        /* LIGNES PASSÉES - au-dessus (invisibles car hors fenêtre) */
-        .lyric-line.past {
-            opacity: 0;
-            filter: blur(5px);
-            transform: translateX(-50px);
-            pointer-events: none;
+        /* LIGNES ÉLOIGNÉES */
+        .lyric-line:not(.active):not(.future) {
+            opacity: 0.1;
+            filter: blur(2px);
+            transform: translateX(-20px);
         }
 
         @keyframes float {
@@ -306,7 +307,7 @@
                 filter: blur(10px);
             }
             100% {
-                opacity: 1;
+                opacity: 0.5;
                 transform: translateY(0);
                 filter: blur(0);
             }
@@ -486,10 +487,9 @@
         <div id="player"></div>
 
         <div class="main-container">
-            <!-- FENÊTRE KARAOKÉ - montre seulement 2 lignes -->
+            <!-- FENÊTRE KARAOKÉ -->
             <div class="karaoke-window">
                 <div id="lyrics-container" class="lyrics-container">
-                    <!-- Les paroles seront injectées ici dynamiquement -->
                     <div class="empty-state">
                         🎵 En attente de la musique...
                     </div>
@@ -538,7 +538,7 @@
                 WAVE_AMPLITUDE: 20,
                 ROTATION_SPEED: 0.1
             },
-            LINE_HEIGHT: 80 // en pixels (5rem = 80px)
+            LINE_HEIGHT: 80
         };
 
         // ====================================================
@@ -620,14 +620,11 @@
         // INITIALISATION DES PAROLES
         // ====================================================
         function initLyrics(lyrics) {
-            // Trier par temps
             const sorted = [...lyrics].sort((a, b) => a.time - b.time);
             
-            // Créer le conteneur de la colonne complète
             lyricsContainer.innerHTML = '';
             lyricsElements = [];
             
-            // Créer chaque ligne
             sorted.forEach((line, index) => {
                 const div = document.createElement('div');
                 div.className = 'lyric-line';
@@ -638,39 +635,30 @@
                 lyricsElements.push(div);
             });
             
-            // Initialiser les classes
+            // Initialiser les classes pour que la première ligne soit active
             updateLineClasses(0);
+            
+            // Initialiser la position du conteneur
+            lyricsContainer.style.transform = 'translateY(0px)';
             
             document.getElementById('total-lines').textContent = lyricsElements.length;
             lineCounterEl.textContent = `0/${lyricsElements.length}`;
         }
 
         // ====================================================
-        // MISE À JOUR DES CLASSES SELON L'INDEX ACTIF
+        // MISE À JOUR DES CLASSES
         // ====================================================
         function updateLineClasses(activeIndex) {
-            // Réinitialiser toutes les classes
-            lyricsElements.forEach(el => {
-                el.classList.remove('active', 'future', 'past');
+            lyricsElements.forEach((el, index) => {
+                el.classList.remove('active', 'future');
+                
+                if (index === activeIndex) {
+                    el.classList.add('active');
+                } else if (index === activeIndex + 1) {
+                    el.classList.add('future');
+                }
+                // Plus besoin de classe 'past' - les autres lignes ont un style par défaut
             });
-            
-            if (activeIndex >= 0 && activeIndex < lyricsElements.length) {
-                // Ligne active
-                lyricsElements[activeIndex].classList.add('active');
-                
-                // Ligne future (suivante)
-                if (activeIndex + 1 < lyricsElements.length) {
-                    lyricsElements[activeIndex + 1].classList.add('future');
-                }
-                
-                // Toutes les autres sont "past" (mais invisibles car hors fenêtre)
-                for (let i = 0; i < activeIndex; i++) {
-                    lyricsElements[i].classList.add('past');
-                }
-                for (let i = activeIndex + 2; i < lyricsElements.length; i++) {
-                    lyricsElements[i].classList.add('past');
-                }
-            }
         }
 
         // ====================================================
@@ -790,7 +778,7 @@
         });
 
         // ====================================================
-        // ANIMATION PRINCIPALE AVEC DÉFILEMENT
+        // ANIMATION PRINCIPALE
         // ====================================================
         function startAnimation() {
             if (animationFrame) cancelAnimationFrame(animationFrame);
@@ -821,11 +809,11 @@
                     }
                     
                     if (activeIndex >= 0) {
-                        // 1. DÉPLACER LE CONTENEUR (principe clé du système)
+                        // 1. DÉPLACER LE CONTENEUR
                         const translateY = -(activeIndex * CONFIG.LINE_HEIGHT);
                         lyricsContainer.style.transform = `translateY(${translateY}px)`;
                         
-                        // 2. Mettre à jour les classes pour les animations
+                        // 2. Mettre à jour les classes
                         updateLineClasses(activeIndex);
                         
                         // 3. Animer la ligne active
