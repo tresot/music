@@ -225,7 +225,9 @@
             transform: translateY(0);
         }
 
-        /* LIGNES DE PAROLES */
+        /* ====================================================
+           STYLES DES LIGNES DE PAROLES (CORRECTION APPLIQUÉE)
+           ==================================================== */
         .lyric-line {
             font-size: clamp(1.5rem, 5vw, 2.8rem);
             font-weight: 500;
@@ -244,12 +246,17 @@
             position: relative;
             flex-shrink: 0;
             animation: floatIn 0.6s ease-out;
-            opacity: 0.5; /* Visibles mais atténuées par défaut */
+            /* Nouveaux styles de base */
+            opacity: 0.3;
+            filter: none;
+            transform: none;
         }
 
         /* LIGNE ACTIVE */
         .lyric-line.active {
-            color: #fff;
+            opacity: 1;
+            filter: none;
+            color: #ffffff;
             font-weight: 700;
             text-shadow: 
                 0 0 30px var(--color-primary),
@@ -262,27 +269,19 @@
                 translateX(calc(sin(var(--phase, 0)) * 20px))
                 translateY(calc(cos(var(--phase, 0)) * 5px));
             filter: 
-                blur(calc(sin(var(--blur-phase, 0)) * 0.1px))
+                blur(calc(sin(var(--blur-phase, 0)) * 1px))
                 brightness(calc(1 + sin(var(--bright-phase, 0)) * 0.2));
             z-index: 10;
             animation: 
                 float var(--float-speed, 8s) ease-in-out infinite,
                 glowPulse var(--glow-speed, 3s) ease-in-out infinite;
-            opacity: 1;
         }
 
         /* LIGNE SUIVANTE (FLOUE) */
         .lyric-line.future {
-            opacity: 0.3;
-            filter: blur(3px);
+            opacity: 0.5;
+            filter: blur(1px);
             transform: translateX(30px);
-        }
-
-        /* LIGNES ÉLOIGNÉES */
-        .lyric-line:not(.active):not(.future) {
-            opacity: 0.1;
-            filter: blur(2px);
-            transform: translateX(-20px);
         }
 
         @keyframes float {
@@ -307,9 +306,9 @@
                 filter: blur(10px);
             }
             100% {
-                opacity: 0.5;
+                opacity: 0.3;
                 transform: translateY(0);
-                filter: blur(0);
+                filter: none;
             }
         }
 
@@ -657,7 +656,6 @@
                 } else if (index === activeIndex + 1) {
                     el.classList.add('future');
                 }
-                // Plus besoin de classe 'past' - les autres lignes ont un style par défaut
             });
         }
 
@@ -861,4 +859,3 @@
     </script>
 </body>
 </html>
-
