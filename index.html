@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karaoke Daily · Expérience immersive</title>
+    <title>Karaoke Daily · Défilement vertical</title>
     <style>
         /* ====================================================
            VARIABLES & RESET
@@ -24,6 +24,7 @@
             --gradient-1: linear-gradient(135deg, #00f7ff, #8a6dff);
             --gradient-2: linear-gradient(45deg, #ff3b7f, #ff9a3b);
             --shadow-neon: 0 0 20px rgba(0, 247, 255, 0.3);
+            --line-height: 5rem; /* Hauteur fixe pour chaque ligne */
         }
 
         body {
@@ -176,24 +177,26 @@
             gap: 2rem;
         }
 
-        .lyrics-card {
+        /* ====================================================
+           NOUVEAU SYSTÈME DE DÉFILEMENT VERTICAL
+           ==================================================== */
+        .karaoke-window {
             background: rgba(20, 24, 30, 0.7);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(138, 109, 255, 0.2);
             border-radius: 3rem;
-            padding: 3rem 2rem;
+            padding: 2rem 2rem;
             box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
-            min-height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             position: relative;
             overflow: hidden;
+            height: calc(var(--line-height) * 2 + 4rem); /* Exactement 2 lignes + padding */
+            min-height: unset;
+            display: flex;
+            align-items: center;
         }
 
-        .lyrics-card::before {
+        .karaoke-window::before {
             content: '';
             position: absolute;
             top: 0;
@@ -204,42 +207,46 @@
             opacity: 0;
             transition: opacity 0.5s ease;
             pointer-events: none;
+            z-index: 1;
         }
 
-        .lyrics-card:hover::before {
+        .karaoke-window:hover::before {
             opacity: 1;
         }
 
-        #lyrics {
+        /* Le conteneur qui défile */
+        .lyrics-container {
             width: 100%;
-            min-height: 300px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            gap: 2rem;
-            position: relative;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+            will-change: transform;
+            transform: translateY(0);
         }
 
-        /* STYLES DYNAMIQUES POUR LES LIGNES */
+        /* Chaque ligne de parole */
         .lyric-line {
             font-size: clamp(1.5rem, 5vw, 2.8rem);
             font-weight: 500;
             color: var(--color-text-dim);
             text-align: center;
-            line-height: 1.4;
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            transition: all 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-            position: relative;
+            line-height: var(--line-height);
+            height: var(--line-height);
+            padding: 0 1rem;
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
-            will-change: transform, opacity, color, filter;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
             animation: floatIn 0.6s ease-out;
         }
 
-        /* LIGNE ACTIVE - NETTE AVEC EFFETS */
+        /* LIGNE ACTIVE - au centre */
         .lyric-line.active {
             color: #ffffff;
             font-weight: 700;
@@ -260,26 +267,21 @@
             animation: 
                 float var(--float-speed, 8s) ease-in-out infinite,
                 glowPulse var(--glow-speed, 3s) ease-in-out infinite;
-            opacity: 1;
         }
 
-        /* LIGNE FUTURE - FLOUE (UNE SEULE À LA FOIS) */
+        /* LIGNE FUTURE - floue (juste en dessous) */
         .lyric-line.future {
             opacity: 0.3;
             filter: blur(3px);
             transform: translateX(30px);
-            transition: all 0.8s ease;
         }
 
-        /* LIGNES PASSÉES - CACHÉES (INVISIBLES) */
+        /* LIGNES PASSÉES - au-dessus (invisibles car hors fenêtre) */
         .lyric-line.past {
             opacity: 0;
             filter: blur(5px);
             transform: translateX(-50px);
-            transition: all 0.8s ease;
             pointer-events: none;
-            position: absolute;
-            visibility: hidden;
         }
 
         @keyframes float {
@@ -412,6 +414,11 @@
             border: 2px dashed rgba(138, 109, 255, 0.3);
             border-radius: 2rem;
             animation: pulse 3s infinite;
+            line-height: var(--line-height);
+            height: var(--line-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         @media (max-width: 768px) {
@@ -419,8 +426,12 @@
                 padding: 1rem;
             }
             
-            .lyrics-card {
-                padding: 2rem 1rem;
+            :root {
+                --line-height: 4rem;
+            }
+            
+            .karaoke-window {
+                padding: 1.5rem 1rem;
                 border-radius: 2rem;
             }
             
@@ -456,10 +467,10 @@
     <div class="app">
         <header class="header">
             <h1 class="title">KARAOKE DAILY</h1>
-            <div class="subtitle">🎤 Le son du jour</div>
+            <div class="subtitle">🎤 Défilement vertical</div>
         </header>
 
-        <!-- API KEY CACHÉE (invisible mais fonctionnelle) -->
+        <!-- API KEY CACHÉE -->
         <div class="api-key-container">
             <input type="text" id="youtube-api-key" value="AIzaSyAzONxagSkvTAu5RUMVMlUOKJkZdcehnUU">
         </div>
@@ -475,10 +486,12 @@
         <div id="player"></div>
 
         <div class="main-container">
-            <div class="lyrics-card">
-                <div id="lyrics">
+            <!-- FENÊTRE KARAOKÉ - montre seulement 2 lignes -->
+            <div class="karaoke-window">
+                <div id="lyrics-container" class="lyrics-container">
+                    <!-- Les paroles seront injectées ici dynamiquement -->
                     <div class="empty-state">
-                        🎵 En attente de la musique du jour...
+                        🎵 En attente de la musique...
                     </div>
                 </div>
             </div>
@@ -524,7 +537,8 @@
                 BASE_GLOW: 3,
                 WAVE_AMPLITUDE: 20,
                 ROTATION_SPEED: 0.1
-            }
+            },
+            LINE_HEIGHT: 80 // en pixels (5rem = 80px)
         };
 
         // ====================================================
@@ -536,13 +550,12 @@
         let animationFrame = null;
         let phase = 0;
         let youtubeApiKey = '';
-        let isPlayerReady = false;
-        let playerInitialized = false;
         let youtubePlayerReady = false;
+        let playerInitialized = false;
         let isPlaying = false;
         
         // Éléments DOM
-        const lyricsContainer = document.getElementById('lyrics');
+        const lyricsContainer = document.getElementById('lyrics-container');
         const songTitleEl = document.getElementById('song-title');
         const statusTextEl = document.getElementById('status-text');
         const timerEl = document.getElementById('timer');
@@ -553,7 +566,7 @@
         const pauseButton = document.getElementById('pause-button');
 
         // ====================================================
-        // CHARGEMENT DE LA CLÉ API (depuis localStorage)
+        // CHARGEMENT DE LA CLÉ API
         // ====================================================
         const savedKey = localStorage.getItem('youtube_api_key');
         if (savedKey) {
@@ -561,7 +574,6 @@
             youtubeApiKey = savedKey;
         }
 
-        // Sauvegarde silencieuse
         apiKeyInput.addEventListener('change', function() {
             youtubeApiKey = this.value.trim();
             if (youtubeApiKey) {
@@ -589,7 +601,6 @@
                 
                 initLyrics(songData.lyrics);
                 
-                // Activer les boutons
                 playButton.disabled = false;
                 
             } catch (error) {
@@ -609,14 +620,17 @@
         // INITIALISATION DES PAROLES
         // ====================================================
         function initLyrics(lyrics) {
+            // Trier par temps
             const sorted = [...lyrics].sort((a, b) => a.time - b.time);
             
+            // Créer le conteneur de la colonne complète
             lyricsContainer.innerHTML = '';
             lyricsElements = [];
             
+            // Créer chaque ligne
             sorted.forEach((line, index) => {
                 const div = document.createElement('div');
-                div.className = 'lyric-line future'; // Tous en future par défaut
+                div.className = 'lyric-line';
                 div.textContent = line.text;
                 div.dataset.time = line.time;
                 div.dataset.index = index;
@@ -624,8 +638,39 @@
                 lyricsElements.push(div);
             });
             
+            // Initialiser les classes
+            updateLineClasses(0);
+            
             document.getElementById('total-lines').textContent = lyricsElements.length;
             lineCounterEl.textContent = `0/${lyricsElements.length}`;
+        }
+
+        // ====================================================
+        // MISE À JOUR DES CLASSES SELON L'INDEX ACTIF
+        // ====================================================
+        function updateLineClasses(activeIndex) {
+            // Réinitialiser toutes les classes
+            lyricsElements.forEach(el => {
+                el.classList.remove('active', 'future', 'past');
+            });
+            
+            if (activeIndex >= 0 && activeIndex < lyricsElements.length) {
+                // Ligne active
+                lyricsElements[activeIndex].classList.add('active');
+                
+                // Ligne future (suivante)
+                if (activeIndex + 1 < lyricsElements.length) {
+                    lyricsElements[activeIndex + 1].classList.add('future');
+                }
+                
+                // Toutes les autres sont "past" (mais invisibles car hors fenêtre)
+                for (let i = 0; i < activeIndex; i++) {
+                    lyricsElements[i].classList.add('past');
+                }
+                for (let i = activeIndex + 2; i < lyricsElements.length; i++) {
+                    lyricsElements[i].classList.add('past');
+                }
+            }
         }
 
         // ====================================================
@@ -637,7 +682,6 @@
             
             statusTextEl.textContent = '⏳ Chargement YouTube...';
             
-            // Charger l'API YouTube
             if (!window.YT) {
                 const tag = document.createElement('script');
                 tag.src = 'https://www.youtube.com/iframe_api';
@@ -746,7 +790,7 @@
         });
 
         // ====================================================
-        // ANIMATION PRINCIPALE (2 LIGNES SEULEMENT)
+        // ANIMATION PRINCIPALE AVEC DÉFILEMENT
         // ====================================================
         function startAnimation() {
             if (animationFrame) cancelAnimationFrame(animationFrame);
@@ -765,7 +809,7 @@
                     const seconds = Math.floor(currentTime % 60);
                     timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                     
-                    // Trouver la ligne active
+                    // Trouver l'index actif
                     let activeIndex = -1;
                     for (let i = 0; i < lyricsElements.length; i++) {
                         const lineTime = parseFloat(lyricsElements[i].dataset.time);
@@ -776,28 +820,18 @@
                         }
                     }
                     
-                    phase += 0.02;
-                    
-                    // Masquer toutes les lignes d'abord
-                    lyricsElements.forEach(element => {
-                        element.classList.remove('active', 'future', 'past');
-                        element.classList.add('past'); // Toutes cachées par défaut
-                    });
-                    
-                    // Afficher seulement 2 lignes : active et future
                     if (activeIndex >= 0) {
-                        // Ligne active (nette)
-                        lyricsElements[activeIndex].classList.remove('past');
-                        lyricsElements[activeIndex].classList.add('active');
+                        // 1. DÉPLACER LE CONTENEUR (principe clé du système)
+                        const translateY = -(activeIndex * CONFIG.LINE_HEIGHT);
+                        lyricsContainer.style.transform = `translateY(${translateY}px)`;
                         
-                        // Ligne future (floue) - si elle existe
-                        if (activeIndex + 1 < lyricsElements.length) {
-                            lyricsElements[activeIndex + 1].classList.remove('past');
-                            lyricsElements[activeIndex + 1].classList.add('future');
-                        }
+                        // 2. Mettre à jour les classes pour les animations
+                        updateLineClasses(activeIndex);
                         
-                        // Mise à jour des animations pour la ligne active
+                        // 3. Animer la ligne active
+                        phase += 0.02;
                         const activeElement = lyricsElements[activeIndex];
+                        
                         const speed = CONFIG.ANIMATION.BASE_SPEED + Math.sin(phase) * 2;
                         const glowSpeed = CONFIG.ANIMATION.BASE_GLOW + Math.cos(phase * 0.5) * 1;
                         
@@ -807,7 +841,7 @@
                         activeElement.style.setProperty('--blur-phase', Math.cos(phase * 0.3));
                         activeElement.style.setProperty('--bright-phase', Math.sin(phase * 0.6));
                         
-                        // Mise à jour compteur
+                        // 4. Mise à jour compteur
                         lineCounterEl.textContent = `${activeIndex + 1}/${lyricsElements.length}`;
                         const progress = ((activeIndex + 1) / lyricsElements.length) * 100;
                         progressFill.style.width = `${progress}%`;
@@ -839,4 +873,3 @@
     </script>
 </body>
 </html>
-
